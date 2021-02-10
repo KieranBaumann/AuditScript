@@ -1,19 +1,27 @@
 #!/usr/bin/python
 
-import os, sys, socket
+import os, sys, socket, argparse
 from datetime import datetime
 
 #Vars
 canreadpass = False
 redtext = "\033[31m"
 whitetext = "\033[39m"
-timenow = datetime.now()
+starttime = datetime.now()
 format = "%d/%m/%Y %H:%M:%S"
-#print banner
+parser = argparse.ArgumentParser()
+
 def banner():
 	print ("Security Audit Script")
 	print ("Created by Kieran Baumann")
-	print ("Script ran at " + timenow.strftime(format))
+	print ("Script ran at " + starttime.strftime(format))
+
+#arguments
+parser.add_argument("help")
+parser.parse_args()
+
+
+
 
 #os.system to run commands
 #info = os.system('uname -snrmo')
@@ -35,6 +43,7 @@ def filecheck():
 		else:
 			print ("[+]" + file + " can not be read")
 
+
 def checkpip():
 	print ("\nPip Packages")
 	try:
@@ -43,17 +52,34 @@ def checkpip():
 		print ("[+]"+ "Pip not installed")
 		print (e)
 
+
 def getlocalIP():
 	print ("\nChecking Ports")
 	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #socket object
 	s.connect(("8.8.8.8", 80)) #connect to the socket
 	localip = s.getsockname()[0]
-	print ("Scanning Ports" + localip) #print local ip for scanning
+	print ("Scanning Ports on " + localip) #print local ip for scanning
 	checkports(localip)
 	s.close()
 
+
 def checkports(localip):
-	for port in range(1,1025)
+	try:
+		for port in range(1,5): #all ports between 1,arg
+			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #open socket
+			socket.setdefaulttimeout(0.1) #set timeout to increase time
+			result = s.connect_ex((localip, port)) #result from connecting to ip, port
+			#check if port is open
+			if result == 0:
+				print("Port {} is open".format(port))
+			else:
+				print("Port {} is closed".format(port))
+			s.close()
+			
+	except KeyboardInterrupt:
+		print("\n Quitting")
+		sys.exit()
+
 
 
 def report():
@@ -64,13 +90,13 @@ def script_usermode():
 	banner() #prints banner
 	osinfo() #prints operating system information
 	filecheck() #checks if important files are readable
-	checkpip()
 	getlocalIP()
+	checkpip()
 	report()
 
 script_usermode()
 
-
+#arguments
 #print pip installs
 #ports open
 #check home directories etc
